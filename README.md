@@ -12,8 +12,10 @@ fabfile for configuring a headless raspberry pi
 6. insert SD card into raspberry pi; connect to ethernet, and then to power
 7. wait for the raspberry pi to boot
 8. find its IP address (e.g. using sth like `nmap -sn 192.168.1.1/24` or by checking your router's web page)
-9. run `fab -H pi@{raspi_IP_address} deploy:hostname={my_hosti},pubkey=/path/to/local/public/key.pub,username={my_user}
+9. run `fab -H {raspi_IP_address} deploy:hostname={my_host},pubkey=/path/to/local/public/key.pub,username={my_user}`
 10. enter remote password for user 'pi' when prompted (default password is 'raspberry')
 11. wait
-12. at some point you will be prompted for the new password for the new user; enter one
-13. at a later point you will be prompted again for the same password.  enter it again
+12. at some point you will be prompted to enter a new password for the new user; enter one
+13. at a later point you may be prompted again for the same password.  enter it again
+14. generally wait a lot
+15. if sth breaks, fix it and retry ;) (once the user has been created, future runs should use `first_run=False`)
