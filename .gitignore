@@ -1,0 +1,4 @@
+.*.swp
+*.pyc
+work
+wpa_supplicant.conf
