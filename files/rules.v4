@@ -10,6 +10,7 @@
 :ICMP - [0:0]
 
 # Acceptable UDP traffic
+-A UDP -p udp --dport 5353 -j ACCEPT
 
 # Acceptable TCP traffic
 -A TCP -p tcp --dport 22 -j ACCEPT

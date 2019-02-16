@@ -16,7 +16,7 @@ def create_disk(disk, boot_partition=None, clean='True'):
 	with lcd('./work'):
 		if clean or not os.path.isfile('./work/raspbian_latest'):
 			local('wget https://downloads.raspberrypi.org/raspbian_latest')
-		local('rm *.img')
+		local('rm -f *.img')
 		local('unzip raspbian_latest')
 		local('sudo dd if=$(find . -name "*.img") of=%s bs=2M' % disk)
 
@@ -147,3 +147,27 @@ def deploy_tensorflow(raspi3='True'):
 		else:
 			run('make -f tensorflow/contrib/makefile/Makefile HOST_OS=PI TARGET=PI OPTFLAGS="-Os" CXX=g++-4.8')
 
+def deploy_27in_epaper_hat_b():
+	deploy_bcm2835()
+	sudo('pip3 install Pillow')
+	run('wget https://www.waveshare.com/w/upload/b/b7/2.7inch_e-paper_hat_b_code.7z')
+	sudo('apt-get install p7zip')
+
+def deploy_bcm2835():
+	version='1.58'
+        run('rm -rf bcm2835-%s bcm2835-%s.tar.gz' % (version,version))
+	run('wget http://www.airspayce.com/mikem/bcm2835/bcm2835-%s.tar.gz' % version)
+	run('tar zxvf bcm2835-%s.tar.gz' % version)
+	with cd('bcm2835-%s' % version):
+			run('./configure')
+			run('make')
+			sudo('make check')
+			sudo('make install')
+
+def deploy_caffe2():
+	run('git clone https://github.com/caffe2/caffe2.git --recursive')
+	with cd('caffe2'):
+		run('./scripts/build_raspbian.sh')
+		with cd('build'):
+			sudo('make install')
+	sudo('pip install future')
