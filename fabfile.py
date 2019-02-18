@@ -128,6 +128,31 @@ def remote_reboot():
 def remote_uname():
 	run('uname -a')
 
+# additional software deployments
+
+## this is to deploy fabric to run it from an rpi for secondary hosts
+def deploy_fabric():
+	upgrade()
+	sudo('apt-get install -y fabric')
+
+def deploy_devtools():
+	upgrade()
+	sudo('apt-get install -y gcc python3 python3-pip build-essential cmake autoconf automake libtool pkg-config')
+
+def deploy_neoai():
+	deploy_devtools()
+	
+	run('git clone --recursive https://github.com/neo-ai/neo-ai-dlr')
+	with cd('neo-ai-dlr'):
+		mkdir('build')
+		with cd('build'):
+			run('cmake ..')
+			run('make -j4')
+			with cd('python'):
+				run('python3 setup.py install --user')
+			sudo('make install')
+			sudo('ldconfig')
+
 def deploy_tensorflow(raspi3='True'):
 	raspi3 = (raspi3.lower() == 'true')
 	
