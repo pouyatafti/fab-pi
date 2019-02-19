@@ -144,7 +144,7 @@ def deploy_neoai():
 	
 	run('git clone --recursive https://github.com/neo-ai/neo-ai-dlr')
 	with cd('neo-ai-dlr'):
-		mkdir('build')
+		run('mkdir build')
 		with cd('build'):
 			run('cmake ..')
 			run('make -j4')
