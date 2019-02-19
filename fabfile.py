@@ -148,10 +148,10 @@ def deploy_neoai():
 		with cd('build'):
 			run('cmake ..')
 			run('make -j4')
-			with cd('python'):
-				run('python3 setup.py install --user')
 			sudo('make install')
 			sudo('ldconfig')
+		with cd('python'):
+			run('python3 setup.py install --user')
 
 def deploy_tensorflow(raspi3='True'):
 	raspi3 = (raspi3.lower() == 'true')
