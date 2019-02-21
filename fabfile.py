@@ -129,6 +129,11 @@ def remote_reboot():
 def remote_uname():
 	run('uname -a')
 
+# optional configuration changes
+def swap_bt_uart():
+	sudo("grep -q '^dtoverlay=pi3-miniuart-bt' /boot/config.txt || echo 'dtoverlay=pi3-miniuart-bt' >/boot/config.txt")
+        reboot()
+
 # additional software deployments
 
 ## this is to deploy fabric to run it from an rpi for secondary hosts
