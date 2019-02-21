@@ -65,6 +65,7 @@ def upgrade():
 
 def setup_wifi():
 	put('./files/wpa_supplicant.conf', '/etc/wpa_supplicant/wpa_supplicant.conf', mode='0600', use_sudo=True)
+	sudo('systemctl enable wpa_supplicant')
 
 def setup_unattended_upgrades():
 	sudo('apt-get install unattended-upgrades apt-listchanges -y')
@@ -176,7 +177,7 @@ def deploy_27in_epaper_hat_b():
 	deploy_bcm2835()
 	sudo('pip3 install Pillow')
 	run('wget https://www.waveshare.com/w/upload/b/b7/2.7inch_e-paper_hat_b_code.7z')
-	sudo('apt-get install p7zip')
+	sudo('apt-get install p7zip -y')
 
 def deploy_bcm2835():
 	version='1.58'
@@ -188,6 +189,32 @@ def deploy_bcm2835():
 			run('make')
 			sudo('make check')
 			sudo('make install')
+
+def deploy_qmi():
+	sudo('apt-get install libqmi-utils udhcpc -y')
+
+def deploy_modemmanager():
+	deploy_qmi()
+	sudo('apt-get install modemmanager libmbim-utils -y')
+
+def deploy_opencv():
+	upgrade()
+	sudo('apt-get install build-essential git cmake pkg-config -y')
+	sudo('apt-get install python2.7-dev python3-dev -y')
+	sudo('apt-get install libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev -y')
+	sudo('apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev -y')
+	sudo('apt-get install libxvidcore-dev libx264-dev -y')
+	sudo('apt-get install libatlas-base-dev gfortran -y')
+        run('mkdir -p opencv')
+        with cd('opencv'):
+		run('git clone https://github.com/opencv/opencv.git')
+		run('git clone https://github.com/opencv/opencv_contrib.git')
+                run('mkdir -p build')
+                with cd('build'):
+			run('cmake -DWITH_QT=OFF -DWITH_GTK=OFF -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D OPENCV_EXTRA_MODULES_PATH=~/opencv/opencv_contrib/modules -D BUILD_EXAMPLES=ON ..')
+			run('make -j4')
+			sudo('make install')
+			sudo('ldconfig')
 
 def deploy_caffe2():
 	run('git clone https://github.com/caffe2/caffe2.git --recursive')
