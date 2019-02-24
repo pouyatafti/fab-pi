@@ -138,12 +138,14 @@ def swap_bt_uart():
 
 ## this is to deploy fabric to run it from an rpi for secondary hosts
 def deploy_fabric():
-	upgrade()
 	sudo('apt-get install -y fabric')
 
 def deploy_devtools():
-	upgrade()
-	sudo('apt-get install -y gcc python3 python3-pip build-essential cmake autoconf automake libtool pkg-config')
+	sudo('apt-get install -y gcc python3 python3-pip python3-venv build-essential cmake autoconf automake libtool pkg-config')
+
+def deploy_golang():
+	sudo('apt-get install -y golang')
+	run("grep -q '^export GOPATH' ~/.profile || echo 'export GOPATH=$HOME/go' >~/.profile")
 
 def deploy_neoai():
 	deploy_devtools()
@@ -201,6 +203,13 @@ def deploy_qmi():
 def deploy_modemmanager():
 	deploy_qmi()
 	sudo('apt-get install modemmanager libmbim-utils -y')
+
+def deploy_openvino():
+	release = '2018.5.445'
+	run('wget https://download.01.org/openvinotoolkit/2018_R5/packages/l_openvino_toolkit_ie_p_%s.tgz' % release)
+	run('tar -xf l_openvino_toolkit_ie_p_%s.tgz' % release)
+	run('sed -i "s|<INSTALLDIR>|$(pwd)/inference_engine_vpu_arm|" inference_engine_vpu_arm/bin/setupvars.sh')
+	run('sh inference_engine_vpu_arm/install_dependencies/install_NCS_udev_rules.sh')
 
 def deploy_opencv():
 	upgrade()
