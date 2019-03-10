@@ -1,29 +1,53 @@
-import os
+import os, platform
 
 from getpass import getpass
+from distutils.util import strtobool
 from fabric.api import settings, env, local, run, sudo, put, reboot, lcd, cd
 
-def create_disk(disk, boot_partition=None, clean='True'):
-	clean = (clean.lower() != 'false')
+def _arg2bool(s): 
+	return bool(strtobool(str(s)))
+
+def get_image():
+	local('rm -rf ./work')
+	local('mkdir -p ./work')
+	with lcd('./work'):
+		local('wget https://downloads.raspberrypi.org/raspbian_latest')
+
+def create_disk(disk, boot_partition=None, get_image=True, overwrite=True, ether_usb=False):
+	get_image = _arg2bool(get_image)
+	overwrite = _arg2bool(overwrite)
+	ether_usb = _arg2bool(ether_usb)
 
 	if boot_partition is None:
 		boot_partition = disk + "1"
 
-	if clean:
-		local('rm -rf ./work')
+	local_platform = platform.system()
+	print local_platform
+	mnt_cmd, umnt_cmd, sed_i = {
+		"Linux": ("sudo mount {dev} {mtpt}", "sudo umount {dev}", ""),
+		"Darwin": ("sudo diskutil mount -mountPoint {mtpt} {dev}", "diskutil umount {dev}", "''"),
+	}[local_platform]
 
 	local('mkdir -p ./work/mnt')
 	with lcd('./work'):
-		if clean or not os.path.isfile('./work/raspbian_latest'):
-			local('wget https://downloads.raspberrypi.org/raspbian_latest')
-		local('rm -f *.img')
-		local('unzip raspbian_latest')
-		local('sudo dd if=$(find . -name "*.img") of=%s bs=2M' % disk)
+		if overwrite:
+			if get_image or not os.path.isfile('./work/raspbian_latest'):
+				get_image()
+			local('rm -f *.img')
+			local('unzip raspbian_latest')
+			local('sudo dd if=$(find . -name "*.img") of=%s bs=2097152' % disk)
+
+		local(umnt_cmd.format(dev=boot_partition))
+		local(mnt_cmd.format(dev=boot_partition, mtpt="./mnt"))
 
 		# enable remote ssh on first boot
-		local('sudo mount %s ./mnt' % boot_partition)
 		local('sudo touch ./mnt/ssh')
-		local('sudo umount ./mnt')
+
+		if ether_usb:
+			local("grep -q '^dtoverlay=dwc2' ./mnt/config.txt || echo 'dtoverlay=dwc2' >>./mnt/config.txt")
+			local("grep -q 'modules-load=dwc2,g_ether' ./mnt/cmdline.txt || sed -i %s 's/rootwait/& modules-load=dwc2,g_ether/' ./mnt/cmdline.txt" % sed_i)
+
+		local(umnt_cmd.format(dev=boot_partition))
 
 def chpasswd(username, passwd=None):
 	# get passwd
@@ -131,8 +155,8 @@ def remote_uname():
 
 # optional configuration changes
 def swap_bt_uart():
-	sudo("grep -q '^dtoverlay=pi3-miniuart-bt' /boot/config.txt || echo 'dtoverlay=pi3-miniuart-bt' >/boot/config.txt")
-        reboot()
+	sudo("grep -q '^dtoverlay=pi3-miniuart-bt' /boot/config.txt || echo 'dtoverlay=pi3-miniuart-bt' >>/boot/config.txt")
+	reboot()
 
 # additional software deployments
 
